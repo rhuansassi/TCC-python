@@ -1,0 +1,54 @@
+name: Python Tests
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Checks unittest
+
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-python
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.py
+          #fetch_depth: 0
+
+      - name: Set up Python all python version
+        if: steps.changed-python.outputs.any_changed == 'true'
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        if: steps.changed-python.outputs.any_changed == 'true'
+        run: sudo apt-get install libgirepository1.0-dev
+
+      - run: pip install --upgrade pip
+        if: steps.changed-python.outputs.any_changed == 'true'
+
+      - run: pip install poetry
+        if: steps.changed-python.outputs.any_changed == 'true'
+
+      - run: poetry install --with dev
+        if: steps.changed-python.outputs.any_changed == 'true'
+
+      - name: Run Test
+        if: steps.changed-python.outputs.any_changed == 'true'
+        run: poetry run coverage run -m unittest
+
+      - name: Create coverage xml
+        if: steps.changed-python.outputs.any_changed == 'true'
+        run: poetry run coverage xml
+
+      - name: Get Cover
+        if: steps.changed-python.outputs.any_changed == 'true'
+        uses: orgoro/coverage@v3.1
+        with:
+            coverageFile: coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}

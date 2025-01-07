@@ -1,0 +1,44 @@
+name: Linting with Pylint
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Checks with pylint
+    steps:
+
+    - name: Install dependencies
+      run: sudo apt-get install libgirepository1.0-dev
+
+    - name: Checkout branch
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get changed files
+      id: changed-python
+      uses: tj-actions/changed-files@v44
+      with:
+        files: |
+          **.py
+        #fetch_depth: 0
+
+    - name: Install python
+      if: steps.changed-python.outputs.any_changed == 'true'
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+
+
+    - run: pip install --upgrade pip
+      if: steps.changed-python.outputs.any_changed == 'true'
+
+    - run: pip install poetry
+      if: steps.changed-python.outputs.any_changed == 'true'
+
+    - run: poetry install --with dev
+      if: steps.changed-python.outputs.any_changed == 'true'
+
+
+    - run: poetry run pylint --rcfile=pylintrc ${{ steps.changed-python.outputs.all_changed_files }}
+      if: steps.changed-python.outputs.any_changed == 'true'

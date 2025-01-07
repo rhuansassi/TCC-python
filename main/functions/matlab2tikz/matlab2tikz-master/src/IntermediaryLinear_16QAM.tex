@@ -1,0 +1,166 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.17647,0.18824,0.27843}%
+\definecolor{mycolor2}{rgb}{0.76863,0.14510,0.23137}%
+\definecolor{mycolor3}{rgb}{0.62353,0.80000,0.18039}%
+\definecolor{mycolor4}{rgb}{0.20392,0.49804,0.76863}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=6.102in,
+height=4.171in,
+at={(1.024in,0.563in)},
+scale only axis,
+xmin=10,
+xmax=30,
+xlabel style={font=\color{white!15!black}},
+xlabel={SNR [dB]},
+ymode=log,
+ymin=1e-05,
+ymax=1,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={BER},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+xmajorgrids,
+ymajorgrids,
+yminorgrids,
+legend style={at={(0.03,0.03)}, anchor=south west, legend cell align=left, align=left, fill=none, draw=none}
+]
+\addplot [color=mycolor1, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.3731734375\\
+12	0.25854609375\\
+14	0.16245\\
+16	0.09408125\\
+18	0.05291484375\\
+20	0.0297625\\
+22	0.01701171875\\
+24	0.010240625\\
+26	0.006103125\\
+28	0.003621875\\
+30	0.00199609375\\
+};
+\addlegendentry{LS 16CP}
+
+\addplot [color=mycolor2, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.36923671875\\
+12	0.25578828125\\
+14	0.16078515625\\
+16	0.0933703125\\
+18	0.0524875\\
+20	0.02958515625\\
+22	0.0168828125\\
+24	0.0100546875\\
+26	0.0058578125\\
+28	0.00336484375\\
+30	0.00175\\
+};
+\addlegendentry{LMMSE 16CP}
+
+\addplot [color=mycolor3, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.313403645833333\\
+12	0.205200520833333\\
+14	0.120376041666667\\
+16	0.0646947916666667\\
+18	0.0337078125\\
+20	0.0176067708333333\\
+22	0.00954114583333333\\
+24	0.00524270833333333\\
+26	0.00304947916666667\\
+28	0.00194427083333333\\
+30	0.001296875\\
+};
+\addlegendentry{RVNN 16CP}
+
+\addplot [color=mycolor4, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.289324479166667\\
+12	0.177154166666667\\
+14	0.0938203125\\
+16	0.0444494791666667\\
+18	0.0206598958333333\\
+20	0.00951822916666667\\
+22	0.0041625\\
+24	0.001575\\
+26	0.000539583333333333\\
+28	0.000160416666666667\\
+30	4.89583333333333e-05\\
+};
+\addlegendentry{SCFNN 16CP}
+
+\addplot [color=mycolor1, dashed, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.37554140625\\
+12	0.26276640625\\
+14	0.1681578125\\
+16	0.09977109375\\
+18	0.0583296875\\
+20	0.03480625\\
+22	0.0213640625\\
+24	0.01385859375\\
+26	0.0095140625\\
+28	0.0067421875\\
+30	0.0052046875\\
+};
+\addlegendentry{LS 8CP}
+
+\addplot [color=mycolor2, dashed, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.37138359375\\
+12	0.26007265625\\
+14	0.166325\\
+16	0.0988515625\\
+18	0.05784609375\\
+20	0.0345359375\\
+22	0.02112421875\\
+24	0.01358984375\\
+26	0.00919375\\
+28	0.00646484375\\
+30	0.004921875\\
+};
+\addlegendentry{LMMSE 8CP}
+
+\addplot [color=mycolor3, dashed, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.31766875\\
+12	0.2109015625\\
+14	0.126903645833333\\
+16	0.071146875\\
+18	0.0390302083333333\\
+20	0.0222161458333333\\
+22	0.012953125\\
+24	0.0081484375\\
+26	0.00565052083333333\\
+28	0.00426927083333333\\
+30	0.00330833333333333\\
+};
+\addlegendentry{RVNN 8CP}
+
+\addplot [color=mycolor4, dashed, line width=2.0pt]
+  table[row sep=crcr]{%
+10	0.291130208333333\\
+12	0.179808854166667\\
+14	0.0967411458333333\\
+16	0.0473130208333333\\
+18	0.0227770833333333\\
+20	0.0113604166666667\\
+22	0.00582447916666667\\
+24	0.00277552083333333\\
+26	0.0015015625\\
+28	0.000927604166666667\\
+30	0.000648958333333333\\
+};
+\addlegendentry{SCFNN 8CP}
+
+\end{axis}
+\end{tikzpicture}%

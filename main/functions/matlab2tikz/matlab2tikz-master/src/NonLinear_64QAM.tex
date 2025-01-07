@@ -1,0 +1,119 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.10588,0.60000,0.54510}%
+\definecolor{mycolor2}{rgb}{0.17647,0.18824,0.27843}%
+\definecolor{mycolor3}{rgb}{0.62353,0.80000,0.18039}%
+\definecolor{mycolor4}{rgb}{0.20392,0.49804,0.76863}%
+\definecolor{mycolor5}{rgb}{0.83529,0.34118,0.38431}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=6.102in,
+height=4.171in,
+at={(1.024in,0.563in)},
+scale only axis,
+xmin=15,
+xmax=35,
+xlabel style={font=\color{white!15!black}},
+xlabel={SNR [dB]},
+ymode=log,
+ymin=0.001,
+ymax=1,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={SER},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+xmajorgrids,
+ymajorgrids,
+yminorgrids,
+legend style={at={(0.03,0.03)}, anchor=south west, legend cell align=left, align=left, fill=none, draw=none}
+]
+\addplot [color=mycolor1, line width=1.5pt]
+  table[row sep=crcr]{%
+15	0.54898828125\\
+17	0.4472890625\\
+19	0.3529625\\
+21	0.2761015625\\
+23	0.21978125\\
+25	0.18171171875\\
+27	0.15656640625\\
+29	0.14022421875\\
+31	0.12990625\\
+33	0.12331640625\\
+35	0.11967421875\\
+};
+\addlegendentry{LS}
+
+\addplot [color=mycolor2, line width=1.5pt]
+  table[row sep=crcr]{%
+15	0.54657421875\\
+17	0.445178125\\
+19	0.35140546875\\
+21	0.27489296875\\
+23	0.21856015625\\
+25	0.1806890625\\
+27	0.15536796875\\
+29	0.13893515625\\
+31	0.1284671875\\
+33	0.1218390625\\
+35	0.1180640625\\
+};
+\addlegendentry{LMMSE}
+
+\addplot [color=mycolor3, line width=1.5pt]
+  table[row sep=crcr]{%
+15	0.4388421875\\
+17	0.3124546875\\
+19	0.20080625\\
+21	0.118383333333333\\
+23	0.06575625\\
+25	0.0357296875\\
+27	0.0197729166666667\\
+29	0.0114083333333333\\
+31	0.0068640625\\
+33	0.004603125\\
+35	0.00360885416666667\\
+};
+\addlegendentry{RVNN}
+
+\addplot [color=mycolor4, line width=1.5pt]
+  table[row sep=crcr]{%
+15	0.42126875\\
+17	0.287460416666667\\
+19	0.1720453125\\
+21	0.091425\\
+23	0.0455807291666667\\
+25	0.0229770833333333\\
+27	0.0122416666666667\\
+29	0.00673333333333333\\
+31	0.00376041666666667\\
+33	0.002365625\\
+35	0.00174635416666667\\
+};
+\addlegendentry{SCFNN}
+
+\addplot [color=mycolor5, line width=1.5pt]
+  table[row sep=crcr]{%
+15	0.670005208333333\\
+17	0.619992708333333\\
+19	0.577746875\\
+21	0.542451041666667\\
+23	0.516366145833333\\
+25	0.500161458333333\\
+27	0.489568229166667\\
+29	0.481511458333333\\
+31	0.474836458333333\\
+33	0.4715\\
+35	0.468898958333333\\
+};
+\addlegendentry{LMS}
+
+\end{axis}
+\end{tikzpicture}%

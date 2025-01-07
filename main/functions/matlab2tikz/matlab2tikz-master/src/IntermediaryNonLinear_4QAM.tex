@@ -1,0 +1,149 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.17647,0.18824,0.27843}%
+\definecolor{mycolor2}{rgb}{0.76863,0.14510,0.23137}%
+\definecolor{mycolor3}{rgb}{0.62353,0.80000,0.18039}%
+\definecolor{mycolor4}{rgb}{0.20392,0.49804,0.76863}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=6.102in,
+height=4.171in,
+at={(1.024in,0.563in)},
+scale only axis,
+xmin=0,
+xmax=20,
+xlabel style={font=\color{white!15!black}},
+xlabel={SNR [dB]},
+ymode=log,
+ymin=1e-05,
+ymax=1,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={BER},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+xmajorgrids,
+ymajorgrids,
+yminorgrids
+]
+\addplot [color=mycolor1, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.446740909090909\\
+2	0.350180681818182\\
+4	0.249238068181818\\
+6	0.158072727272727\\
+8	0.0889630681818182\\
+10	0.0447494318181818\\
+12	0.0213585227272727\\
+14	0.00990454545454546\\
+16	0.00467045454545455\\
+18	0.00188863636363636\\
+20	0.000701136363636364\\
+};
+\addplot [color=mycolor2, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.471404545454546\\
+2	0.363103977272727\\
+4	0.254136931818182\\
+6	0.159525568181818\\
+8	0.0891522727272727\\
+10	0.0450551136363636\\
+12	0.0219857954545455\\
+14	0.0106232954545455\\
+16	0.00521136363636364\\
+18	0.00218636363636364\\
+20	0.000832386363636364\\
+};
+\addplot [color=mycolor3, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.349127083333333\\
+2	0.260817708333333\\
+4	0.174767708333333\\
+6	0.103030729166667\\
+8	0.05355\\
+10	0.0258463541666667\\
+12	0.011934375\\
+14	0.0053640625\\
+16	0.00226979166666667\\
+18	0.000902083333333333\\
+20	0.0003265625\\
+};
+\addplot [color=mycolor4, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.3314953125\\
+2	0.243869270833333\\
+4	0.158703645833333\\
+6	0.0899072916666667\\
+8	0.0445317708333333\\
+10	0.0206546875\\
+12	0.00909895833333333\\
+14	0.0037796875\\
+16	0.00131614583333333\\
+18	0.000342708333333333\\
+20	6.45833333333333e-05\\
+};
+\addplot [color=mycolor1, dashed, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.446555113636364\\
+2	0.350114772727273\\
+4	0.249722727272727\\
+6	0.159571590909091\\
+8	0.0902017045454545\\
+10	0.0464289772727273\\
+12	0.0228625\\
+14	0.0113625\\
+16	0.00553977272727273\\
+18	0.00268295454545455\\
+20	0.00126931818181818\\
+};
+\addplot [color=mycolor2, dashed, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.472282954545454\\
+2	0.36314375\\
+4	0.255363636363636\\
+6	0.160539772727273\\
+8	0.0902431818181818\\
+10	0.046525\\
+12	0.0233420454545455\\
+14	0.0119585227272727\\
+16	0.00602159090909091\\
+18	0.00298238636363636\\
+20	0.00140681818181818\\
+};
+\addplot [color=mycolor3, dashed, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.3496578125\\
+2	0.2607421875\\
+4	0.1749640625\\
+6	0.1037046875\\
+8	0.0547223958333333\\
+10	0.0263614583333333\\
+12	0.012390625\\
+14	0.00576666666666667\\
+16	0.00262708333333333\\
+18	0.00105260416666667\\
+20	0.00049375\\
+};
+\addplot [color=mycolor4, dashed, line width=2.0pt, forget plot]
+  table[row sep=crcr]{%
+0	0.332054166666667\\
+2	0.243250520833333\\
+4	0.1587359375\\
+6	0.0902572916666667\\
+8	0.0453911458333333\\
+10	0.020771875\\
+12	0.0094984375\\
+14	0.00412552083333333\\
+16	0.00152239583333333\\
+18	0.0004609375\\
+20	0.000119791666666667\\
+};
+\end{axis}
+\end{tikzpicture}%
