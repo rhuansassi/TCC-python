@@ -201,7 +201,7 @@ def get_block_window(p):
     c = np.ones((l - 2*p.b, ))
     return np.hstack([rise, c, fall])
 
-
+"""
 def do_addcp(p, signal):
     if p.NCP == 0:
         return signal
@@ -219,6 +219,128 @@ def do_addcp(p, signal):
         res[:p.NCP, :] = signal[-p.NCP:, :]
 
     return do_apply_blockwindow(p, res)
+
+"""
+def do_addcp(p, x):
+    Ncp = p.Ncp
+    Ncs = p.Ncs
+    b = p.b
+
+    # Extrai as amostras para formar o prefixo cíclico
+    if x.ndim == 1:
+        # Caso x seja um vetor 1D
+        xcp_segment = x[-Ncp:]
+        xcs_segment = x[:Ncs]
+        x_comb = np.concatenate([xcp_segment, x, xcs_segment])
+    else:
+        # Caso x seja um array 2D do tipo (amostras x canais)
+        xcp_segment = x[-Ncp:, :]
+        xcs_segment = x[:Ncs, :]
+        x_comb = np.concatenate([xcp_segment, x, xcs_segment], axis=0)
+
+    if b > 0:
+        w = get_window(p)
+        # Ajusta w para multiplicar x_comb
+        if x.ndim > 1 and w.ndim == 1:
+            w = w[:, np.newaxis]
+        xcp = x_comb * w
+    else:
+        xcp = x_comb
+
+    return xcp
+
+
+def get_window(p):
+    Ncp = p.Ncp
+    Ncs = p.Ncs
+    window = p.window
+    b = p.b
+    K = p.K
+    M = p.M
+    N = M * K
+
+    window_types = {
+        'r1st': 0,
+        '1st': 1,
+        'r4th': 2,
+        '4th': 3,
+        'rrc': 4,
+        'rc': 5,
+        'rrc4th': 6,
+        'rc4th': 7,
+        'xia1st': 8,
+        'xia4th': 9
+    }
+
+    if window not in window_types:
+        raise ValueError('Unknown window!')
+
+    type_ = window_types[window]
+
+    rise, fall = get_ramp(b, 1, type_)
+    middle_length = N + Ncp + Ncs - 2 * b
+    w = np.concatenate([rise, np.ones(middle_length), fall])
+
+    return w
+
+
+def get_ramp(M, a, type_):
+    eps_val = np.finfo(float).eps
+    m = np.arange(M)
+
+    R = (m - M / 2 - eps_val) / (a * M) + 0.5
+    R = np.clip(R, 0, 1)
+    F = 1 - R
+
+    R4th = (R ** 4) * (35 - 84 * R + 70 * (R ** 2) - 20 * (R ** 3))
+    F4th = 1 - R4th
+
+    pi = np.pi
+
+    if type_ == 0:
+        # root ramp
+        rise = R ** 0.5
+        fall = (1 - rise ** 2) ** 0.5
+    elif type_ == 1:
+        # ramp
+        rise = R
+        fall = 1 - rise
+    elif type_ == 2:
+        # root 4th order
+        rise = (R4th ** 0.5)
+        fall = (1 - rise ** 2) ** 0.5
+    elif type_ == 3:
+        # 4th order
+        rise = R4th
+        fall = 1 - rise
+    elif type_ == 4:
+        # root raised cosine (rrc)
+        rise = (0.5 * (np.cos(F * pi) + 1)) ** 0.5
+        fall = (1 - rise ** 2) ** 0.5
+    elif type_ == 5:
+        # raised cosine (rc)
+        rise = 0.5 * (np.cos(F * pi) + 1)
+        fall = 1 - rise
+    elif type_ == 6:
+        # rrc 4th order
+        rise = (0.5 * (np.cos(F4th * pi) + 1)) ** 0.5
+        fall = (1 - rise ** 2) ** 0.5
+    elif type_ == 7:
+        # rc 4th order
+        rise = 0.5 * (np.cos(F4th * pi) + 1)
+        fall = 1 - rise
+    elif type_ == 8:
+        # xia
+        rise = 0.5 * (np.exp(-1j * F * pi) + 1)
+        fall = 1 - rise
+    elif type_ == 9:
+        # xia 4th order
+        rise = 0.5 * (np.exp(-1j * F4th * pi) + 1)
+        fall = 1 - rise
+    else:
+        raise ValueError("Unknown type for get_ramp")
+
+    return rise, fall
 
 
 def do_apply_blockwindow(p, signal):

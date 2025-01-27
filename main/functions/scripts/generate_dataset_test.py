@@ -23,10 +23,12 @@ def generate_dataset_test(p, num_symbols, channel, snr_db, h, plot=False):
         s_k = get_random_symbols_normal(p)
         s_list.append(s_k)
 
+
         # QAM Modulation
         M = 2 ** p.mu  # Modulation order
         dd_k = qammod(s_k, M)
         dd_list.append(dd_k)
+
 
         # Map to D matrix
         Dd = do_map(p, dd_k)

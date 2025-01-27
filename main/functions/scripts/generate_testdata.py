@@ -6,14 +6,13 @@ from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
-from scripts.utils import apply_non_linearities, do_removecp, D_mapPrecode, modulatePrecode
+from scripts.utils import do_removecp, D_mapPrecode, modulatePrecode, apply_non_linearities
 from wlib.qammodulation import qammod
 
 def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
-    # Pilot positions (0-based)
+
     pilot_positions = np.arange(0, p.K, p.delta_k)
 
-    # Em vez de pré-alocar arrays, vamos usar listas
     s_list = []
     dd_list = []
     y_list = []
@@ -42,7 +41,7 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
         # Modula a matriz de pilotos (para obter Xp)
         xp = modulatePrecode(p, Dp)
         Xp_k = p.Fp @ xp
-        Xp_list.append(Xp_k)
+        #Xp_list.append(Xp_k)
 
         # Modulação GFDM - Precode
         x = modulatePrecode(p, D)
@@ -51,10 +50,10 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
         xCp = do_addcp(p, x)
 
         # Aplica não-linearidades
-        yNonLinear = applyNonLinearities(p, xCp)
+        yNonLinear = apply_non_linearities(p, xCp)
 
         # Sinal recebido pelo canal
-        y_k = applyChannel3GPP(channel, yNonLinear, snr_db, h)
+        y_k = apply_channel_3gpp(channel, yNonLinear, snr_db)
         y_list.append(y_k)
 
         # Remove CP
@@ -68,6 +67,6 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
     dd_out = np.array(dd_list).T          # (p.K, num_symbols)
     y_out = np.array(y_list).T            # (p.K + p.cpLen, num_symbols)
     yNoCp_out = np.array(yNoCp_list).T    # (p.K - len(pilot_positions), num_symbols)
-    Xp_out = np.array(Xp_list).T          # (p.K, num_symbols)
+    Xp_out = np.array(Xp_k).T          # (p.K, num_symbols)
 
     return s_out, dd_out, y_out, yNoCp_out, Xp_out

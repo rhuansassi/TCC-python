@@ -1,4 +1,4 @@
-
+from tabnanny import verbose
 
 import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers, callbacks
@@ -67,3 +67,17 @@ def train_rvnn(model, XTrain, YTrain, XValid, YValid, epochs, batch_size, valid_
         verbose=1
     )
     return model, history
+
+def predict(trainedNetRVNN, rvnnInput):
+    # Se for (384,) transforma em (1,384)
+    if rvnnInput.ndim == 1:
+        rvnnInput = rvnnInput.reshape(1, -1)
+
+    # Se for (384,1) transforma em (1,384)
+    if rvnnInput.shape == (384, 1):
+        rvnnInput = rvnnInput.T
+
+    # Agora rvnnInput deve ser (1,384)
+    predictions = trainedNetRVNN.predict(rvnnInput, verbose = 0)  # Espera (N_samples, 384)
+    return predictions
+
