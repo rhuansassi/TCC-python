@@ -6,7 +6,7 @@ from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
-from scripts.utils import do_removecp, D_mapPrecode, modulatePrecode, apply_non_linearities
+from scripts.utils import do_removecp, D_map_precode, modulate_precode, apply_non_linearities
 from wlib.qammodulation import qammod
 
 def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
@@ -30,7 +30,7 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
         dd_list.append(dd_k)
 
         # Mapeia para a matriz D
-        Dd = D_mapPrecode(p, dd_k)
+        Dd = D_map_precode(p, dd_k)
 
         # Gera pilotos no domínio do tempo
         Dp = generate_pilots(p)
@@ -39,21 +39,21 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
         D = Dd + Dp
 
         # Modula a matriz de pilotos (para obter Xp)
-        xp = modulatePrecode(p, Dp)
+        xp = modulate_precode(p, Dp)
         Xp_k = p.Fp @ xp
         #Xp_list.append(Xp_k)
 
         # Modulação GFDM - Precode
-        x = modulatePrecode(p, D)
+        x = modulate_precode(p, D)
 
         # Adiciona CP
         xCp = do_addcp(p, x)
 
         # Aplica não-linearidades
-        yNonLinear = apply_non_linearities(p, xCp)
+        y_non_linear = apply_non_linearities(p, xCp)
 
         # Sinal recebido pelo canal
-        y_k = apply_channel_3gpp(channel, yNonLinear, snr_db)
+        y_k = apply_channel_3gpp(channel, y_non_linear, snr_db)
         y_list.append(y_k)
 
         # Remove CP

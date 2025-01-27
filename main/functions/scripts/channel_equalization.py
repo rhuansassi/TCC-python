@@ -1,8 +1,7 @@
 import numpy as np
 
-from scripts.equalization_utils import LS_Estimation, LMMSE_Estimation, perform_LS_Equalization, demodulate_precode, \
-    unmap_precode
-from scripts.utils import do_removecp, fft_u, ifft_u
+from scripts.equalization_utils import LS_Estimation, LMMSE_Estimation, perform_LS_Equalization
+from scripts.utils import do_removecp, fft_u, ifft_u, unmap_precode, demodulate_precode
 
 
 def channel_equalization(p, y, Xp, Fp, delaySpread, SNR_dB, R_HH):

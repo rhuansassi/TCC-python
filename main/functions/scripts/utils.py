@@ -133,7 +133,7 @@ def shuffle_data(X, Y):
     return X[:, indices], Y[:, indices]
 
 
-def D_mapPrecode(p, s):
+def D_map_precode(p, s):
     subcarrier_positions = np.arange(1, p.M * p.K + 1)  # Índices de 1 a M*K
     pilot_positions = np.arange(1, p.K + 1, p.delta_k)  # Índices espaçados por delta_K
 
@@ -149,7 +149,7 @@ def D_mapPrecode(p, s):
     return D
 
 
-def modulatePrecode(p, D):
+def modulate_precode(p, D):
     # Obtém o pulso do transmissor
     g = get_transmitter_pulse(p)
 
@@ -242,8 +242,6 @@ def ifft_u(x):
     return np.fft.ifft(x) * np.sqrt(len(x))
 
 
-import numpy as np
-
 def do_qamdemodulate(d, p):
 
     # Reescale de acordo com o fator sqrt(2/3*(2^mu - 1))
@@ -263,5 +261,79 @@ def do_qamdemodulate(d, p):
         raise ValueError(f"Tipo de modulação {p['modType']} não suportado.")
 
     return sh, d
+
+def demodulate_precode(p, x):
+    g_tx = get_transmitter_pulse(p)
+    G_precode = np.fft.fft(g_tx)
+    G_precode[0:2] = 0
+    g_precode = np.fft.ifft(G_precode)
+    norm_factor = np.sqrt(np.sum(np.abs(g_precode) ** 2))
+
+    g = get_receiver_pulse(p, 'ZF')
+    g = g[0::int(p.K / p.K)]
+    G = np.fft.fft(g)
+
+    M = p.M
+    K = p.K
+    L = int(len(G) / M)
+
+    pilot_positions = np.arange(1, K + 1, p.delta_k, dtype=int)
+    data_positions = np.setdiff1d(np.arange(1, K + 1, dtype=int), pilot_positions)
+
+    indexes = np.arange(1, M + 1, dtype=int)
+    indexes = indexes[1:]
+    real_indexes = indexes - 1
+
+    Xhat = np.fft.fft(x)
+    Dhat = np.zeros((K, M), dtype=complex)
+
+    for k in pilot_positions:
+        shift_amount = int(np.ceil(L * M / 2) - M * (k - 1))
+        carrier = np.roll(Xhat, shift_amount)
+        portion = carrier[:L * M]
+        portion_shifted = np.fft.fftshift(portion)
+        carrier_matched = portion_shifted * (G * norm_factor)
+        # Reshape em 'Fortran order' para reproduzir o comportamento do reshape do MATLAB
+        carrier_matched_2d = carrier_matched.reshape((M, L), order='F')
+        dhat = np.sum(carrier_matched_2d, axis=1) / L
+        dhat_subset = dhat[real_indexes]
+        dhat[real_indexes] = np.fft.ifft(dhat_subset)
+        Dhat[k - 1, :] = dhat
+
+    Dhat[pilot_positions - 1, 0] = 0
+
+    for k in data_positions:
+        shift_amount = int(np.ceil(L * M / 2) - M * (k - 1))
+        carrier = np.roll(Xhat, shift_amount)
+        portion = carrier[:L * M]
+        portion_shifted = np.fft.fftshift(portion)
+        carrier_matched = portion_shifted * G
+        carrier_matched = carrier_matched.reshape((M, L))
+        dhat = np.sum(carrier_matched, axis=1) / L
+        dhat = np.fft.ifft(dhat)
+        Dhat[k - 1, :] = dhat
+
+    return Dhat
+
+
+def unmap_precode(p, Dhat):
+
+    d_set = np.arange(1, p.K * p.M + 1)
+    pilot_positions = np.arange(1, p.K + 1, p.delta_k)
+    d_set = np.setdiff1d(d_set, pilot_positions)
+
+    kset = get_kset(p) + 1
+    mset = get_mset(p) + 1
+
+    if len(kset) == p.K and len(mset) == p.M:
+        s_long = Dhat.flatten(order='F')
+    else:
+        Dm = Dhat[kset - 1][:, mset - 1]
+        s_long = Dm.flatten(order='F')
+
+    # dhat = s_long(d_set)  (lembrando que d_set é 1-based)
+    dhat = s_long[d_set - 1]
+
+    return dhat
 
 

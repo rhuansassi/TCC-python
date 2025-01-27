@@ -1,4 +1,3 @@
-import sys
 import os
 import time
 import numpy as np
@@ -6,7 +5,6 @@ import math
 
 
 from matplotlib import pyplot as plt
-from scipy.io import loadmat
 from main.functions.gfdm.detail.defaultGFDM import get_defaultGFDM
 from main.functions.scripts.utils import get_pilot_frequency, get_eb_n0, get_real_valued_snr, get_num_neurons_per_layer
 from main.functions.scripts.generate_channel_model import generate_channel_model
@@ -18,6 +16,7 @@ from scripts.generate_dataset_test import generate_dataset_test
 from scripts.generate_testdata import generate_test_data
 from scripts.generate_dataset import generate_dataset
 from scripts.get_ser_comparison import get_SER_Comparison
+from scripts.perform_inference_networks import perform_inference_networks
 from scripts.process_input_nn import process_input_nn
 
 
@@ -31,13 +30,13 @@ show_validation_errors = False
 # Parâmetros de treinamento
 do_training = True
 num_symbols = 5000
-epochs = 1   #mudar aqui
+epochs = 200   #mudar aqui
 valid_freq = 10
 apply_non_linear = False
 
 # Definição de maxEpochs e iterPerEpoch
-maxEpochs = 1  #mudar aqui
-iterPerEpoch = 512
+max_epochs = 70  #mudar aqui
+iter_per_epoch = 512
 
 # Parâmetros de comparação
 num_symbols_comparison = 1000
@@ -99,58 +98,51 @@ for mod_order in M_orders:
         channel, h, path_power, delay_spread = generate_channel_model(p_dl, profile='TDLA30')
 
         # Dataset de treinamento/validação
-        XTrain, YTrain, XValid, YValid, TrainLabels, ValidLabels = generate_dataset(p_dl, num_symbols, channel, snr_db, h, plot=False)
-
-        XTrain = XTrain.astype(np.complex64)
-        YTrain = YTrain.astype(np.complex64)
-        XValid = XValid.astype(np.complex64)
-        YValid = YValid.astype(np.complex64)
+        x_train, y_train, x_valid, y_valid, train_labels, valid_labels = generate_dataset(p_dl, num_symbols, channel, snr_db, h, plot=False)
 
         # RVNN
-        NInputs = XTrain.shape[0]
-        scalingFactorRVNN = np.sqrt(NInputs)
+        n_inputs = x_train.shape[0]
+        scaling_factor_rvnn = np.sqrt(n_inputs)
 
-        XTrainStruct, YTrainStruct, XValidStruct, YValidStruct = process_input_nn(
-            XTrain / scalingFactorRVNN,
-            YTrain / scalingFactorRVNN,
-            XValid / scalingFactorRVNN,
-            YValid / scalingFactorRVNN,
+        x_train_struct, y_train_struct, x_valid_struct, y_valid_struct = process_input_nn(
+            x_train / scaling_factor_rvnn,
+            y_train / scaling_factor_rvnn,
+            x_valid / scaling_factor_rvnn,
+            y_valid / scaling_factor_rvnn,
             False
         )
 
-        inputLayerDim = 2 * NInputs
-        numNeuronsPerLayer = get_num_neurons_per_layer(p_dl)
-        rvnn_model = create_rvnn(inputLayerDim, numNeuronsPerLayer)
+        input_layer_dim = 2 * n_inputs
+        num_neurons_per_layer = get_num_neurons_per_layer(p_dl)
+        rvnn_model = create_rvnn(input_layer_dim, num_neurons_per_layer)
 
         if do_training:
             rvnn_history = train_rvnn(
                 rvnn_model,
-                XTrainStruct,
-                YTrainStruct,
-                XValidStruct,
-                YValidStruct,
-                epochs=maxEpochs,
-                batch_size=iterPerEpoch,
+                x_train_struct,
+                y_train_struct,
+                x_valid_struct,
+                y_valid_struct,
+                epochs=max_epochs,
+                batch_size=iter_per_epoch,
                 valid_freq=valid_freq,
                 show_train_errors=show_train_errors,
                 show_validation_errors=show_validation_errors
             )
 
         # SCFNN
-        scalingFactorSCF = np.sqrt(NInputs)
-        XTrainNorm_SCF = (XTrain / scalingFactorSCF).T
-        YTrainNorm_SCF = (YTrain / scalingFactorSCF).T
-        XValidNorm_SCF = (XValid / scalingFactorSCF).T
-        YValidNorm_SCF = (YValid / scalingFactorSCF).T
+        scaling_factor_scf = np.sqrt(n_inputs)
+        x_train_norm_scf = (x_train / scaling_factor_scf).T
+        y_train_norm_scf = (y_train / scaling_factor_scf).T
+        x_valid_norm_scf = (x_valid / scaling_factor_scf).T
+        y_valid_norm_scf = (y_valid / scaling_factor_scf).T
 
         netSCF = SCFFNN(gpu_enable=False)
         # Camada simples SCFNN
-        netSCF.add_layer(ishape=NInputs, neurons=NInputs, activation=act_func.tanh, weights_rate=0.01, biases_rate=0.01)
+        netSCF.add_layer(ishape=n_inputs, neurons=n_inputs, activation=act_func.tanh, weights_rate=0.01, biases_rate=0.01)
 
         if do_training:
-            netSCF.fit(XTrainNorm_SCF, YTrainNorm_SCF, XValidNorm_SCF, YValidNorm_SCF, epochs=epochs)
-
-
+            netSCF.fit(x_train_norm_scf, y_train_norm_scf, x_valid_norm_scf, y_valid_norm_scf, epochs=epochs)
 
 
 
@@ -183,16 +175,11 @@ for mod_order in M_orders:
 
                 s, d, y, y_no_cp, Xp = generate_test_data(p_ce, num_symbols_comparison, channel, snr_value_db, h)
 
-
-
                 # Gera dataset de teste para DL
                 XTest, XLabels = generate_dataset_test(p_dl, num_symbols_comparison, channel, snr_value_db, h, plot=False)
 
-                XTest = XTest.astype(np.complex64)
-                XLabels = XLabels.astype(np.complex64)
-
                 # Inference SCFNN e RVNN
-                #scfOutput, rvNNOutput = perform_inference_networks(XTest, netSCF, scalingFactorSCF, rvnn_model, scalingFactorRVNN)
+                scfOutput, rvNNOutput = perform_inference_networks(XTest, netSCF, scaling_factor_scf, rvnn_model, scaling_factor_rvnn)
 
                 # Equalização de canal LS e LMMSE
                 dhat_LS, dhat_LMMSE = channel_equalization(p_ce, y, Xp, p_ce.Fp, delay_spread, snr_value_db, R_HH)

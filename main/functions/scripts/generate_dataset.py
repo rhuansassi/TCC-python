@@ -44,11 +44,11 @@ def generate_dataset(p, num_symbols, channel, snr_db, h, plot=False):
         xCp = do_addcp(p, x)
 
         # Apply Non-Linearities
-        yNonLinear = apply_non_linearities(p, xCp)
+        y_non_linear = apply_non_linearities(p, xCp)
 
 
         # Receive signal in time
-        y = apply_channel_3gpp(channel, yNonLinear, snr_db)  # Corrected unpacking
+        y = apply_channel_3gpp(channel, y_non_linear, snr_db)  # Corrected unpacking
 
         # Remove cyclic prefix
         yOutCp_k = do_removecp(p, y)
