@@ -337,3 +337,29 @@ def unmap_precode(p, Dhat):
     return dhat
 
 
+def qammodulate(s, p):
+
+    s = np.asarray(s, dtype=int)            # Símbolos inteiros
+    M = 2 ** p.mu                           # Ordem da constelação
+    sqrtM = int(np.sqrt(M))                 # Dimensão de cada eixo (I e Q)
+
+    # Mapeamento retangular simples: sem garantir Gray-coded em Python
+    # I, Q em [0..sqrtM - 1]
+    I = s % sqrtM
+    Q = s // sqrtM
+
+    # Ajuste para coordenadas centradas em torno de 0
+    # Ex.: sqrtM=4 => valores em [-3, -1, +1, +3]
+    I2 = 2 * I - sqrtM + 1
+    Q2 = 2 * Q - sqrtM + 1
+
+    # Constelação complexa antes da normalização
+    d = I2 + 1j * Q2
+
+    # Normalização de energia média = 1
+    d /= np.sqrt((2/3) * (M - 1))
+
+    return d
+
+
+

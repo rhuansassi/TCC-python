@@ -6,7 +6,7 @@ from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
-from scripts.utils import apply_non_linearities, do_removecp
+from scripts.utils import apply_non_linearities, do_removecp, qammodulate
 from wlib.qammodulation import qammod
 from main.functions.gfdm.detail.mapping import do_map
 
@@ -26,7 +26,8 @@ def generate_dataset_test(p, num_symbols, channel, snr_db, h, plot=False):
 
         # QAM Modulation
         M = 2 ** p.mu  # Modulation order
-        dd_k = qammod(s_k, M)
+        #dd_k = qammod(s_k, M)
+        dd_k = qammodulate(s_k, p)
         dd_list.append(dd_k)
 
 

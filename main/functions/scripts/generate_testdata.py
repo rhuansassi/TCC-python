@@ -6,7 +6,7 @@ from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
-from scripts.utils import do_removecp, D_map_precode, modulate_precode, apply_non_linearities
+from scripts.utils import do_removecp, D_map_precode, modulate_precode, apply_non_linearities, qammodulate
 from wlib.qammodulation import qammod
 
 def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
@@ -26,7 +26,8 @@ def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
 
         # Modulação QAM
         M = 2 ** p.mu
-        dd_k = qammod(s_k, M)
+        #dd_k = qammod(s_k, M)
+        dd_k = qammodulate(s_k,p)
         dd_list.append(dd_k)
 
         # Mapeia para a matriz D

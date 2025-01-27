@@ -30,17 +30,17 @@ show_validation_errors = False
 # Parâmetros de treinamento
 do_training = True
 num_symbols = 5000
-epochs = 200   #mudar aqui
+epochs = 170   #mudar aqui
 valid_freq = 10
 apply_non_linear = False
 
 # Definição de maxEpochs e iterPerEpoch
-max_epochs = 70  #mudar aqui
+max_epochs = 80  #mudar aqui
 iter_per_epoch = 512
 
 # Parâmetros de comparação
 num_symbols_comparison = 1000
-num_iterations_per_snr = 2
+num_iterations_per_snr = 11
 
 cp_lengths = [16]
 M_orders = [4]
@@ -59,7 +59,7 @@ for mod_order in M_orders:
 
         # Modulação
         mod_type = 'QAM'
-        eb_no_db = [0,2,4] #get_eb_n0(mod_order)
+        eb_no_db = get_eb_n0(mod_order)
 
         # Parâmetros p_dl
         p_dl = get_defaultGFDM('BER')
@@ -186,7 +186,7 @@ for mod_order in M_orders:
 
 
                 # Cálculo do SER
-                LS_SER_It[snr_idx, i], LMMSE_SER_It[snr_idx, i], SCF_SER_It[snr_idx, i], RVNN_SER_It[snr_idx, i] = get_SER_Comparison(p_dl, p_ce, s, XLabels, dhat_LS, dhat_LMMSE)#, scfOutput, rvNNOutput)
+                LS_SER_It[snr_idx, i], LMMSE_SER_It[snr_idx, i], SCF_SER_It[snr_idx, i], RVNN_SER_It[snr_idx, i] = get_SER_Comparison(p_dl, p_ce, s, XLabels, dhat_LS, dhat_LMMSE, scfOutput, rvNNOutput)
 
 
 
