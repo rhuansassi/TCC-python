@@ -5,7 +5,7 @@ from numpy.random import normal
 
 from gfdm.detail.mapping import do_map
 # Adjusted import to match your project structure
-from main.functions.gfdm.detail.gfdmutil import get_kset, get_mset, get_transmitter_pulse
+from main.functions.gfdm.detail.gfdmutil import get_kset, get_mset, get_transmitter_pulse, get_receiver_pulse
 from wlib.qammodulation import qamdemod
 
 
