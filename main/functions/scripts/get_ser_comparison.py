@@ -1,6 +1,6 @@
 import numpy as np
 
-from scripts.utils import do_qamdemodulate
+from scripts.utils import qammodulate, do_qamdemodulate
 
 """
 def get_SER_Comparison(p, pCE, txLabels, XLabels, rxSymbols_LS, rxSymbols_LMMSE, scfOutput, rvNNOuput):
@@ -39,7 +39,7 @@ def get_SER_Comparison(p, pCE, txLabels, XLabels, rxSymbols_LS, rxSymbols_LMMSE,
 
     return LS_SER, LMMSE_SER, SCF_SER, RVNN_SER
 """
-def get_SER_Comparison(p, pCE, txLabels, XLabels, rxSymbols_LS, rxSymbols_LMMSE, scfOutput=None, rvNNOuput=None):
+def get_SER_Comparison(p, p_ce, txLabels, XLabels, rxSymbols_LS, rxSymbols_LMMSE, scfOutput=None, rvNNOuput=None):
     num_symbols = rxSymbols_LS.shape[1]
 
     LS = np.zeros(num_symbols)
@@ -49,18 +49,18 @@ def get_SER_Comparison(p, pCE, txLabels, XLabels, rxSymbols_LS, rxSymbols_LMMSE,
 
     for symbol in range(num_symbols):
         # Classical estimation demodulation
-        LS_predictedLabels, _ = do_qamdemodulate(rxSymbols_LS[:, symbol], pCE)
-        LMMSE_predictedLabels, _ = do_qamdemodulate(rxSymbols_LMMSE[:, symbol], pCE)
+        LS_predictedLabels = do_qamdemodulate(rxSymbols_LS[:, symbol], p_ce)
+        LMMSE_predictedLabels = do_qamdemodulate(rxSymbols_LMMSE[:, symbol], p_ce)
 
         LS[symbol] = np.sum(LS_predictedLabels != txLabels[:, symbol])
         LMMSE[symbol] = np.sum(LMMSE_predictedLabels != txLabels[:, symbol])
 
         if scfOutput is not None:
-            SCF_predictedLabels, _ = do_qamdemodulate(scfOutput[:, symbol], p)
+            SCF_predictedLabels = do_qamdemodulate(scfOutput[:, symbol], p)
             SCF[symbol] = np.sum(SCF_predictedLabels != XLabels[:, symbol])
 
         if rvNNOuput is not None:
-            RVNN_predictedLabels, _ = do_qamdemodulate(rvNNOuput[:, symbol], p)
+            RVNN_predictedLabels = do_qamdemodulate(rvNNOuput[:, symbol], p)
             RVNN[symbol] = np.sum(RVNN_predictedLabels != XLabels[:, symbol])
 
     LS_SER = np.mean(LS)

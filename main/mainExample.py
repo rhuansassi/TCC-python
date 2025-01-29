@@ -5,6 +5,8 @@ import math
 
 
 from matplotlib import pyplot as plt
+from scipy.io import loadmat
+
 from main.functions.gfdm.detail.defaultGFDM import get_defaultGFDM
 from main.functions.scripts.utils import get_pilot_frequency, get_eb_n0, get_real_valued_snr, get_num_neurons_per_layer
 from main.functions.scripts.generate_channel_model import generate_channel_model
@@ -30,17 +32,17 @@ show_validation_errors = False
 # Parâmetros de treinamento
 do_training = True
 num_symbols = 5000
-epochs = 170   #mudar aqui
+epochs = 200   #mudar aqui
 valid_freq = 10
 apply_non_linear = False
 
 # Definição de maxEpochs e iterPerEpoch
-max_epochs = 80  #mudar aqui
+max_epochs = 100  #mudar aqui
 iter_per_epoch = 512
 
 # Parâmetros de comparação
 num_symbols_comparison = 1000
-num_iterations_per_snr = 11
+num_iterations_per_snr = 10
 
 cp_lengths = [16]
 M_orders = [4]
@@ -60,6 +62,8 @@ for mod_order in M_orders:
         # Modulação
         mod_type = 'QAM'
         eb_no_db = get_eb_n0(mod_order)
+        eb_no_db = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+
 
         # Parâmetros p_dl
         p_dl = get_defaultGFDM('BER')
@@ -75,6 +79,7 @@ for mod_order in M_orders:
         p_dl.mu = int(math.log2(mod_order))
         p_dl.delta_k = 0
         p_dl.apply_non_linearities = apply_non_linear
+        p_dl.oQAM = 0
 
         # Parâmetros p_ce
         p_ce = get_defaultGFDM('BER')
@@ -90,6 +95,7 @@ for mod_order in M_orders:
         p_ce.mu = int(math.log2(mod_order))
         p_ce.delta_k = pilot_freq
         p_ce.apply_non_linearities = apply_non_linear
+        p_ce.oQAM = 0
 
         # SNR
         snr_db = get_real_valued_snr(mod_order)
@@ -194,11 +200,11 @@ for mod_order in M_orders:
         RVNN_SER = np.sum(RVNN_SER_It.T, axis=0) / (num_iterations_per_snr * N)
 
 
-        numPilots = p_ce.K / p_ce.delta_k
-        numPilots = int(numPilots)
+        num_pilots = p_ce.K // p_ce.delta_k
+        num_pilots = int(num_pilots)
 
-        LS_SER = np.sum(LS_SER_It.T, axis=0) / (num_iterations_per_snr * (N - numPilots))
-        LMMSE_SER = np.sum(LMMSE_SER_It.T, axis=0) / (num_iterations_per_snr * (N - numPilots))
+        LS_SER = np.sum(LS_SER_It.T, axis=0) / (num_iterations_per_snr * (N - num_pilots))
+        LMMSE_SER = np.sum(LMMSE_SER_It.T, axis=0) / (num_iterations_per_snr * (N - num_pilots))
 
 
         plt.figure(simulation_count)
@@ -211,10 +217,9 @@ for mod_order in M_orders:
         end_time = time.time()
         print("Tempo total de simulação: ", end_time - start_time, "segundos")
 
+        plt.legend()
         plt.xlabel('SNR [dB]')
         plt.ylabel('SER')
         plt.title(f'SER Comparison - {2**p_dl.mu} QAM | {p_dl.Ncp} CP')
         plt.grid(True)
-        plt.legend()
         plt.show()
-

@@ -1,5 +1,6 @@
 import numpy as np
 
+from gfdm.detail import DefaultDemodulator
 from scripts.equalization_utils import LS_Estimation, LMMSE_Estimation, perform_LS_Equalization
 from scripts.utils import do_removecp, fft_u, ifft_u, unmap_precode, demodulate_precode
 
@@ -33,8 +34,11 @@ def channel_equalization(p, y, Xp, Fp, delaySpread, SNR_dB, R_HH):
         xhat_LMMSE = ifft_u(Xhat_LMMSE)
 
         # 6) Demodular (ex.: remoção de GFDM ou pré-codificação)
-        DHat_LS = demodulate_precode(p, xhat_LS)
-        DHat_LMMSE = demodulate_precode(p, xhat_LMMSE)
+
+
+        demodulador = DefaultDemodulator(p, 'ZF')
+        DHat_LS = demodulador.demodulate(xhat_LS)
+        DHat_LMMSE = demodulador.demodulate(xhat_LMMSE)
 
         # 7) "Desmapear" a matriz D em símbolos
         dhat_LS_k = unmap_precode(p, DHat_LS)

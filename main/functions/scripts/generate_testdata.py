@@ -1,13 +1,11 @@
-import numpy as np
-import matplotlib.pyplot as plt
 
-from gfdm.detail.Modulator import do_modulate  # caso seja o modulatePrecode
+
 from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
 from scripts.utils import do_removecp, D_map_precode, modulate_precode, apply_non_linearities, qammodulate
-from wlib.qammodulation import qammod
+
 
 def generate_test_data(p, num_symbols, channel, snr_db, h, plot=False):
 

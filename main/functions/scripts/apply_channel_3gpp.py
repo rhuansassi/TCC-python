@@ -11,24 +11,23 @@ def get_channel_impulse_response(channel):
         h[delay] += gain
     return h
 
-
-def apply_channel_3gpp(channel, transmittedSignal, SNR_dB):
+def apply_channel_3gpp(channel, transmitted_signal, SNR_dB):
     # Verificar a dimensão do transmittedSignal
-    if transmittedSignal.ndim == 1:
-        transmittedSignal = transmittedSignal[:, np.newaxis]
+    if transmitted_signal.ndim == 1:
+        transmitted_signal = transmitted_signal[:, np.newaxis]
         is_1d_input = True
     else:
         is_1d_input = False
 
-    num_samples, num_blocks = transmittedSignal.shape
-    y = np.zeros_like(transmittedSignal, dtype=complex)
+    num_samples, num_blocks = transmitted_signal.shape
+    y = np.zeros_like(transmitted_signal, dtype=complex)
 
     # Obter a resposta ao impulso do canal
     h_channel = get_channel_impulse_response(channel)
 
     for k in range(num_blocks):
         # Convoluir o sinal transmitido com a resposta ao impulso do canal
-        channel_output = np.convolve(transmittedSignal[:, k], h_channel, mode='same')
+        channel_output = np.convolve(transmitted_signal[:, k], h_channel, mode='same')
 
         # Calcular a potência do sinal
         signal_power = np.mean(np.abs(channel_output) ** 2)

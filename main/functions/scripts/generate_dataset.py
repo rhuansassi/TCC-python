@@ -6,8 +6,7 @@ from gfdm.detail.gfdmutil import do_addcp
 from main.functions.gfdm.detail.mllike import *
 from scripts.apply_channel_3gpp import apply_channel_3gpp
 from scripts.generate_pilots import generate_pilots
-from scripts.utils import apply_non_linearities, do_removecp, do_qamdemodulate, qammodulate
-from wlib.qammodulation import qammod, qamdemod
+from scripts.utils import apply_non_linearities, do_removecp, qammodulate
 from main.functions.gfdm.detail.mapping import do_map
 
 def generate_dataset(p, num_symbols, channel, snr_db, h, plot=False):
@@ -43,18 +42,18 @@ def generate_dataset(p, num_symbols, channel, snr_db, h, plot=False):
         x = do_modulate(p, D)
 
         # Add cyclic prefix
-        xCp = do_addcp(p, x)
+        x_cp = do_addcp(p, x)
 
         # Apply Non-Linearities
-        y_non_linear = apply_non_linearities(p, xCp)
+        y_non_linear = apply_non_linearities(p, x_cp)
 
 
         # Receive signal in time
         y = apply_channel_3gpp(channel, y_non_linear, snr_db)  # Corrected unpacking
 
         # Remove cyclic prefix
-        yOutCp_k = do_removecp(p, y)
-        yOutCp_list.append(yOutCp_k)
+        y_out_cp_k = do_removecp(p, y)
+        yOutCp_list.append(y_out_cp_k)
 
 
     # Save Data
@@ -64,12 +63,12 @@ def generate_dataset(p, num_symbols, channel, snr_db, h, plot=False):
 
     num_train = int(num_symbols * train_size)
 
-    XTrain = X[:, :num_train]
-    YTrain = Y[:, :num_train]
-    TrainLabels = labels[:, :num_train]
+    x_train = X[:, :num_train]
+    y_train = Y[:, :num_train]
+    train_labels = labels[:, :num_train]
 
-    XValid = X[:, num_train:]
-    YValid = Y[:, num_train:]
-    ValidLabels = labels[:, num_train:]
+    x_valid = X[:, num_train:]
+    y_valid = Y[:, num_train:]
+    valid_labels = labels[:, num_train:]
 
-    return XTrain, YTrain, XValid, YValid, TrainLabels, ValidLabels
+    return x_train, y_train, x_valid, y_valid, train_labels, valid_labels

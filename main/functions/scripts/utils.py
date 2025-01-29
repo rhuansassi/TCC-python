@@ -242,76 +242,113 @@ def ifft_u(x):
     return np.fft.ifft(x) * np.sqrt(len(x))
 
 
-def do_qamdemodulate(d, p):
+def do_qamdemodulate(y, p):
 
-    # Reescale de acordo com o fator sqrt(2/3*(2^mu - 1))
-    d = d * np.sqrt((2/3) * (2** p.mu - 1))
+    M = 2 ** p.mu
+    sqrtM = int(np.sqrt(M))
+    if sqrtM * sqrtM != M:
+        raise ValueError("Demodulador requer QAM retangular: M deve ser um quadrado perfeito.")
 
-    if p.mod_type == 'QAM':
-        # Se você tiver uma função qamdemod customizada ou de biblioteca, use-a.
-        # Aqui, chamamos uma função fictícia (que você deverá implementar ou
-        # substituir pela chamada correta de alguma biblioteca).
-        sh = qamdemod(d, 2**p.mu)
+    # Mesma escala usada na modulação
+    scale = np.sqrt((2/3) * (M - 1))
 
-    elif p.mod_type == 'PSK':
-        # Idem para a demodulação PSK
-        sh = pskdemod(d, 2**p.mu)
+    # Moldamos y para 1D para processar facilmente
+    original_shape = y.shape
+    y_flat = y.ravel()
 
-    else:
-        raise ValueError(f"Tipo de modulação {p['modType']} não suportado.")
+    # Desnormaliza
+    y_scaled = y_flat * scale
+    y_real = y_scaled.real
+    y_imag = y_scaled.imag
 
-    return sh, d
+    def quantize_dim(val):
+        # i_approx = round((val + (sqrtM-1))/2)
+        i_approx = int(np.round((val + (sqrtM - 1)) / 2.0))
+        if i_approx < 0:
+            i_approx = 0
+        elif i_approx > sqrtM - 1:
+            i_approx = sqrtM - 1
+        return i_approx
+
+    def gray2bin(g):
+        b = 0
+        while g > 0:
+            b ^= g
+            g >>= 1
+        return b
+
+    # Vetorizar as funções acima para operar em arrays
+    qdim_vec = np.vectorize(quantize_dim)
+    gray2bin_vec = np.vectorize(gray2bin)
+
+    # i_gray e q_gray => arrays de mesmo tamanho que y_flat
+    i_gray = qdim_vec(y_real)
+    q_gray = qdim_vec(y_imag)
+
+    # Converte cada i_gray, q_gray em i_bin, q_bin
+    i_bin = gray2bin_vec(i_gray)
+    q_bin = gray2bin_vec(q_gray)
+
+    # Símbolo final: s = q_bin* sqrtM + i_bin
+    s_hat_flat = q_bin * sqrtM + i_bin
+
+    # Retorna ao formato original
+    s_hat = s_hat_flat.reshape(original_shape)
+
+    return s_hat
 
 def demodulate_precode(p, x):
+    # Get Precode Matrix
     g_tx = get_transmitter_pulse(p)
     G_precode = np.fft.fft(g_tx)
-    G_precode[0:2] = 0
+    G_precode[:2] = [0, 0]
     g_precode = np.fft.ifft(G_precode)
     norm_factor = np.sqrt(np.sum(np.abs(g_precode) ** 2))
 
+    # Get Zero Forcing Receiver Pulse
     g = get_receiver_pulse(p, 'ZF')
-    g = g[0::int(p.K / p.K)]
+    g = g[::p.K // p.K]  # Equivalent to MATLAB's g(1:p.K/p.K:end)
     G = np.fft.fft(g)
 
-    M = p.M
-    K = p.K
-    L = int(len(G) / M)
+    # Parameters
+    M, K = p.M, p.K
+    L = len(G) // M
 
-    pilot_positions = np.arange(1, K + 1, p.delta_k, dtype=int)
-    data_positions = np.setdiff1d(np.arange(1, K + 1, dtype=int), pilot_positions)
+    # Initialize references
+    if p.delta_k > 0:
+        pilot_positions = np.arange(0, p.K, p.delta_k)
+    else:
+        pilot_positions = np.array([])  # Lista vazia
 
-    indexes = np.arange(1, M + 1, dtype=int)
-    indexes = indexes[1:]
-    real_indexes = indexes - 1
+    data_positions = np.setdiff1d(np.arange(0, p.K), pilot_positions)
+
+    indexes = np.arange(1, M)  # Equivalent to MATLAB's indexes = 1:M; indexes(1) = [];
 
     Xhat = np.fft.fft(x)
     Dhat = np.zeros((K, M), dtype=complex)
 
-    for k in pilot_positions:
-        shift_amount = int(np.ceil(L * M / 2) - M * (k - 1))
-        carrier = np.roll(Xhat, shift_amount)
-        portion = carrier[:L * M]
-        portion_shifted = np.fft.fftshift(portion)
-        carrier_matched = portion_shifted * (G * norm_factor)
-        # Reshape em 'Fortran order' para reproduzir o comportamento do reshape do MATLAB
-        carrier_matched_2d = carrier_matched.reshape((M, L), order='F')
-        dhat = np.sum(carrier_matched_2d, axis=1) / L
-        dhat_subset = dhat[real_indexes]
-        dhat[real_indexes] = np.fft.ifft(dhat_subset)
-        Dhat[k - 1, :] = dhat
+    # At pilot subcarriers apply Unnormalized Filter
+    if pilot_positions.size > 0:
+        for k in pilot_positions:
+            carrier = np.roll(Xhat, np.ceil(L * M / 2).astype(int) - M * (k - 1))
+            carrier = np.fft.fftshift(carrier[:L * M])
+            carrier_matched = carrier * (G * norm_factor)
+            dhat = np.sum(carrier_matched.reshape(M, L), axis=1) / L
+            dhat[indexes] = np.fft.ifft(dhat[indexes])
+            Dhat[k, :] = dhat
 
-    Dhat[pilot_positions - 1, 0] = 0
+    # Set zeros on pilot positions only if pilot_positions is not empty
+    if pilot_positions.size > 0:
+        Dhat[pilot_positions, 0] = np.zeros(len(pilot_positions))
 
+    # At data positions demodulate normally
     for k in data_positions:
-        shift_amount = int(np.ceil(L * M / 2) - M * (k - 1))
-        carrier = np.roll(Xhat, shift_amount)
-        portion = carrier[:L * M]
-        portion_shifted = np.fft.fftshift(portion)
-        carrier_matched = portion_shifted * G
-        carrier_matched = carrier_matched.reshape((M, L))
-        dhat = np.sum(carrier_matched, axis=1) / L
+        carrier = np.roll(Xhat, np.ceil(L * M / 2).astype(int) - M * (k - 1))
+        carrier = np.fft.fftshift(carrier[:L * M])
+        carrier_matched = carrier * G
+        dhat = np.sum(carrier_matched.reshape(M, L), axis=1) / L
         dhat = np.fft.ifft(dhat)
-        Dhat[k - 1, :] = dhat
+        Dhat[k, :] = dhat
 
     return Dhat
 
@@ -339,27 +376,111 @@ def unmap_precode(p, Dhat):
 
 def qammodulate(s, p):
 
-    s = np.asarray(s, dtype=int)            # Símbolos inteiros
-    M = 2 ** p.mu                           # Ordem da constelação
-    sqrtM = int(np.sqrt(M))                 # Dimensão de cada eixo (I e Q)
+    s = np.asarray(s, dtype=int)
 
-    # Mapeamento retangular simples: sem garantir Gray-coded em Python
-    # I, Q em [0..sqrtM - 1]
-    I = s % sqrtM
-    Q = s // sqrtM
+    M = 2 ** p.mu
 
-    # Ajuste para coordenadas centradas em torno de 0
-    # Ex.: sqrtM=4 => valores em [-3, -1, +1, +3]
+    if np.any(s < 0) or np.any(s >= M):
+        raise ValueError(f"Símbolos em 's' devem estar em [0..{M-1}].")
+
+    sqrtM = int(np.sqrt(M))
+    if sqrtM * sqrtM != M:
+        raise ValueError("Para QAM retangular, 2^p.mu deve ser um quadrado perfeito (ex.: 16, 64).")
+
+    def bin2gray(n):
+        return n ^ (n >> 1)
+
+    table = np.zeros(M, dtype=int)
+    idx = 0
+    for q_bin in range(sqrtM):
+        for i_bin in range(sqrtM):
+            i_gray = bin2gray(i_bin)
+            q_gray = bin2gray(q_bin)
+            final_index = q_gray * sqrtM + i_gray
+            table[idx] = final_index
+            idx += 1
+
+    s_gray = table[s]
+
+    I = s_gray % sqrtM
+    Q = s_gray // sqrtM
+
+
     I2 = 2 * I - sqrtM + 1
     Q2 = 2 * Q - sqrtM + 1
 
-    # Constelação complexa antes da normalização
+    # Símbolo complexo
     d = I2 + 1j * Q2
 
-    # Normalização de energia média = 1
-    d /= np.sqrt((2/3) * (M - 1))
+
+    scale = np.sqrt((2/3) * (M - 1))
+    d = d / scale
 
     return d
 
+
+def get_kset(p):
+    if hasattr(p, 'Kset'):
+        kset = np.mod(p.Kset, p.K)
+        assert len(kset) <= p.K
+    elif hasattr(p, 'Kon'):
+
+        up_to = int(np.ceil(p.Kon / 2))
+        first_part = np.arange(1, up_to + 1)
+        down_from = p.K + 1 - int(np.floor(p.Kon / 2))
+        second_part = np.arange(down_from, p.K + 1)
+        kset = np.concatenate([first_part, second_part]) - 1
+        assert p.Kon <= p.K
+    else:
+        # se não houver Kset ou Kon, assuma todos subcarriers
+        kset = np.arange(0, p.K)
+
+    assert len(np.unique(kset)) == len(kset), "kset contém duplicados!"
+    return kset
+
+
+def get_mset(p):
+    if hasattr(p, 'Mset'):
+        mset = np.mod(p.Mset, p.M)
+        assert len(mset) <= p.M
+    elif hasattr(p, 'Mon'):
+        # mset = ceil((p.M-p.Mon)/2) : (p.M-1-floor((p.M-p.Mon)/2))
+        start = int(np.ceil((p.M - p.Mon) / 2))
+        end = p.M - 1 - int(np.floor((p.M - p.Mon) / 2))
+        mset = np.arange(start, end + 1)
+        assert p.Mon <= p.M
+    else:
+        # se não houver Mset ou Mon, assuma todos subsymbols
+        mset = np.arange(0, p.M)
+
+    assert len(np.unique(mset)) == len(mset), "mset contém duplicados!"
+    return mset
+
+
+def do_map(p, s):
+
+    kset = get_kset(p)
+    mset = get_mset(p)
+
+    # Caso todos subcarriers e subsymbols estejam ativos
+    if len(kset) == p.K and len(mset) == p.M:
+        # Em MATLAB: D = reshape(s, [p.K, p.M]) (column-major)
+        D = s.reshape((p.K, p.M), order='F')
+    else:
+        # Caso apenas parte deles esteja ativa
+        # Dm = reshape(s, [length(kset), length(mset)])
+        Dm = s.reshape((len(kset), len(mset)), order='F')
+
+        # res1(kset, :) = Dm
+        res1 = np.zeros((p.K, len(mset)), dtype=complex)
+        res1[kset, :] = Dm
+
+        # res(:, mset) = res1
+        res = np.zeros((p.K, p.M), dtype=complex)
+        res[:, mset] = res1
+
+        D = res
+
+    return D
 
 

@@ -22,7 +22,7 @@ def LS_Estimation(p, Y, Xp, Fp, delaySpread):
     h_channelLen = (
             p.delta_k
             * p.M
-            * (Fp.conj().T @ H)  # @ é a operação de multiplicação matricial em Python
+            * (Fp.conj().T @ H)
             / np.sqrt(p.K * p.M)
     )
 
